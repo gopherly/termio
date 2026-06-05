@@ -66,6 +66,20 @@ flowchart LR
     errout_f --> err_chain
     out_f -. "Fd()" .-> fd_out["original FD"]
     errout_f -. "Fd()" .-> fd_err["original FD"]
+
+    style caller fill:#6c63ff,stroke:#4a42d4,color:#fff
+    style streams fill:#2d9cdb,stroke:#1a7ab5,color:#fff
+    style in_f fill:#a0d2db,stroke:#6fb3bf,color:#1a1a2e
+    style out_f fill:#27ae60,stroke:#1e8c4d,color:#fff
+    style errout_f fill:#e74c3c,stroke:#c0392b,color:#fff
+    style cp_out fill:#f39c12,stroke:#d68910,color:#fff
+    style cp_err fill:#f39c12,stroke:#d68910,color:#fff
+    style sticky_out fill:#8e44ad,stroke:#6c3483,color:#fff
+    style sticky_err fill:#8e44ad,stroke:#6c3483,color:#fff
+    style raw_out fill:#1abc9c,stroke:#148f77,color:#fff
+    style raw_err fill:#1abc9c,stroke:#148f77,color:#fff
+    style fd_out fill:#95a5a6,stroke:#7f8c8d,color:#fff
+    style fd_err fill:#95a5a6,stroke:#7f8c8d,color:#fff
 ```
 
 The core package (`gopherly.dev/termio`) has one non-stdlib dependency:
