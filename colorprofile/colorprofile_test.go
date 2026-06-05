@@ -68,6 +68,36 @@ func TestDetect_NoColor_StripsAnsi(t *testing.T) {
 	assert.Equalf(t, "hello", buf.String(), "NO_COLOR must strip ANSI escapes")
 }
 
+// TestFrom_ReturnsPolicy verifies From constructs a Policy with the given profile.
+func TestFrom_ReturnsPolicy(t *testing.T) {
+	t.Parallel()
+
+	p := colorprofile.From(colorprofile.TrueColor)
+
+	assert.NotNilf(t, p, "From must return a non-nil Policy")
+	assert.Equalf(t, colorprofile.TrueColor, p.Profile(), "Profile must match the value passed to From")
+}
+
+// TestPolicy_String verifies String returns the profile's human-readable name.
+func TestPolicy_String(t *testing.T) {
+	t.Parallel()
+
+	p := colorprofile.From(colorprofile.ANSI256)
+
+	assert.Equalf(t, "ANSI256", p.String(), "String must return the profile name")
+}
+
+// TestDetect_Profile verifies Detect exposes the detected profile via Profile().
+// A [bytes.Buffer] (non-TTY) with NO_COLOR=1 yields NoTTY — the lowest level.
+func TestDetect_Profile(t *testing.T) {
+	t.Parallel()
+
+	p := colorprofile.Detect(&bytes.Buffer{}, []string{"NO_COLOR=1"})
+
+	assert.Equalf(t, colorprofile.NoTTY, p.Profile(),
+		"non-TTY writer with NO_COLOR=1 must detect NoTTY profile")
+}
+
 // TestDetect_WithColorPolicy_Integration verifies the full Streams stack.
 func TestDetect_WithColorPolicy_Integration(t *testing.T) {
 	t.Parallel()

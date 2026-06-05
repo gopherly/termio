@@ -151,19 +151,25 @@ import (
 )
 
 func main() {
-    s := termio.System(
-        termio.WithColorPolicy(colorprofile.Detect(os.Stdout, os.Environ())),
-    )
+    policy := colorprofile.Detect(os.Stdout, os.Environ())
+    s := termio.System(termio.WithColorPolicy(policy))
 
     // ANSI sequences are passed through, downsampled, or stripped
     // depending on what the terminal supports.
     fmt.Fprintln(s.Out, "\x1b[32mgreen\x1b[0m or plain, depending on the terminal")
+
+    // Reuse the detected level without re-running detection — pass it to
+    // Charm libraries (lipgloss, glamour) or branch on it directly.
+    if policy.Profile() == colorprofile.TrueColor {
+        fmt.Fprintln(s.Out, "full 24-bit color available")
+    }
 }
 ```
 
 `colorprofile.Detect` reads environment variables like `NO_COLOR`, `COLORTERM`,
 and `TERM` to pick the right color level automatically. The policy applies to
-both `Out` and `ErrOut`.
+both `Out` and `ErrOut`. Use `colorprofile.From` to force a specific level
+(e.g. from a `--color` flag) instead of detecting it.
 
 ### Custom streams
 
@@ -306,7 +312,7 @@ s.SetStdoutTTY(true)  // stdout is a TTY but stdin is not
 | Package | Import path | Purpose |
 |---|---|---|
 | termio | `gopherly.dev/termio` | core primitives (Streams, Writer, ColorPolicy) |
-| colorprofile | `gopherly.dev/termio/colorprofile` | opt-in charmbracelet color adapter |
+| colorprofile | `gopherly.dev/termio/colorprofile` | opt-in charmbracelet color adapter; `Policy` type with `Detect`, `From`, and `Profile()` |
 | termiotest | `gopherly.dev/termio/termiotest` | buffer-backed test helpers |
 
 ## Comparison

@@ -23,6 +23,16 @@ import (
 	"gopherly.dev/termio/colorprofile"
 )
 
+// ExamplePolicy_Profile shows how to build a policy from an explicit level
+// and retrieve it — useful when passing the level to Charm libraries
+// (lipgloss, glamour) or branching on color capability.
+func ExamplePolicy_Profile() {
+	policy := colorprofile.From(colorprofile.ANSI256)
+	fmt.Println(policy.Profile())
+	// Output:
+	// ANSI256
+}
+
 // ExampleDetect shows how to wire colorprofile.Detect into termio.System.
 // When NO_COLOR is set, ANSI escape sequences are stripped before reaching
 // the output buffer.
