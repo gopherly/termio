@@ -1,0 +1,517 @@
+# Copyright 2026 The Gopherly Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# golangci-lint configuration (HARD/REQUIRED checks)
+# This config contains only critical linters that must pass.
+version: "2"
+
+linters:
+  enable:
+    # === SECURITY ===
+    # bidichk: Detects dangerous Unicode bidirectional text (security)
+    # Prevents invisible characters that can hide malicious code
+    - bidichk
+
+    # gosec: Security vulnerability scanner
+    # Detects SQL injection, hardcoded creds, path traversal, bad TLS, etc.
+    - gosec
+
+    # asciicheck: Prevents non-ASCII identifiers (portability + homoglyph attacks)
+    # BAD: func calculateСумма() {} // Cyrillic 'С' looks identical to Latin 'C'
+    # GOOD: func calculateSum() {}
+    - asciicheck
+
+    # === CRITICAL BUGS ===
+    # errcheck: Ensures errors are checked (critical bugs)
+    # BAD:  file.Close()
+    # GOOD: if err := file.Close(); err != nil { return err }
+    - errcheck
+
+    # nilnesserr: Enhanced nilerr - catches complex nil/error mismatches
+    # BAD:  if err != nil { return nil, differentErr }
+    # GOOD: if err != nil { return nil, err }
+    - nilnesserr
+
+    # nilnil: Catches returning nil error with nil/invalid value
+    # BAD:  func GetUser(id int) (*User, error) { return nil, nil }
+    # GOOD: func GetUser(id int) (*User, error) { return nil, ErrNotFound }
+    - nilnil
+
+    # staticcheck: The gold standard Go linter (has autofix)
+    # Catches 100+ bug patterns, style issues, and simplifications
+    - staticcheck
+
+    # govet: Standard Go vet checks (extended)
+    # Catches printf errors, mutex copies, struct tag issues, shadowing, etc.
+    - govet
+
+    # forcetypeassert: Catches unsafe type assertions that can panic
+    # BAD:  s := v.(string)           // panics if v is not string
+    # GOOD: s, ok := v.(string); if !ok { return err }
+    - forcetypeassert
+
+    # ineffassign: Detects assignments to variables that are never used
+    # BAD:  x := compute(); x = 5; return x // first assignment wasted
+    # GOOD: x := 5; return x
+    - ineffassign
+
+    # wastedassign: Finds assignments whose values are never read before reassignment
+    # BAD:  x := 1; x = 2; return x // initial value 1 is never used
+    # GOOD: x := 2; return x
+    - wastedassign
+
+    # unconvert: Removes unnecessary type conversions
+    # BAD:  int(x) when x is already int
+    # GOOD: x directly
+    - unconvert
+
+    # === CORRECTNESS ===
+    # errorlint: Ensures proper Go 1.13+ error handling
+    # BAD:  if err == ErrNotFound { }        // breaks with wrapped errors
+    # GOOD: if errors.Is(err, ErrNotFound) { }
+    - errorlint
+
+    # durationcheck: Catches duration * duration bugs
+    # BAD:  timeout := time.Second * time.Second  // nonsense: 1e18 ns!
+    # GOOD: timeout := 5 * time.Second
+    - durationcheck
+
+    # makezero: Catches slice initialization bugs
+    # BAD:  s := make([]int, 5); s = append(s, 1)  // s has 6 elements, not 1!
+    # GOOD: s := make([]int, 0, 5); s = append(s, 1)
+    - makezero
+
+    # reassign: Prevents reassignment of package-level variables
+    # BAD:  io.EOF = errors.New("custom")  // breaks all io.EOF checks!
+    # GOOD: Don't reassign package variables
+    - reassign
+
+    # copyloopvar: Detects unnecessary loop variable copies (Go 1.22+ semantics)
+    # BAD:  for _, v := range items { v := v; go process(v) }
+    # GOOD: for _, v := range items { go process(v) } // Go 1.22+ loop vars are per-iteration
+    - copyloopvar
+
+    # gocheckcompilerdirectives: Validates //go: compiler directives
+    # BAD:  //go:noinlin  // typo — silently ignored by the compiler!
+    # GOOD: //go:noinline
+    - gocheckcompilerdirectives
+
+    # === API / NAMING ===
+    # errname: Enforces error naming conventions
+    # BAD:  var Failed = errors.New("failed")
+    # GOOD: var ErrFailed = errors.New("failed")
+    - errname
+
+    # inamedparam: Requires named parameters in interface methods
+    # BAD:  type Handler interface { Handle(context.Context, string) error }
+    # GOOD: type Handler interface { Handle(ctx context.Context, id string) error }
+    - inamedparam
+
+    # ireturn: Enforces "accept interfaces, return concrete types" principle
+    # BAD:  func NewWriter() io.Writer { return &myWriter{} }
+    # GOOD: func NewWriter() *Writer { return &Writer{} }
+    - ireturn
+
+    # err113: Requires errors to be defined as variables, not created inline
+    # BAD:  return errors.New("not found")           // breaks errors.Is callers
+    # GOOD: var ErrNotFound = errors.New("not found"); return ErrNotFound
+    # NOTE: fmt.Errorf("context: %w", err) is allowed — it wraps, not creates.
+    - err113
+
+    # recvcheck: Ensures consistent receiver types (pointer vs value) within a type
+    # BAD:  func (t Type) A() {}; func (t *Type) B() {} // inconsistent
+    # GOOD: func (t *Type) A() {}; func (t *Type) B() {} // consistent
+    - recvcheck
+
+    # nakedret: Flags naked returns in longer functions
+    # BAD:  func foo() (x int) { x = 5; /* 20 lines */ return }
+    # GOOD: func foo() (x int) { x = 5; /* 20 lines */ return x }
+    - nakedret
+
+    # predeclared: Catches shadowing of Go's predeclared identifiers
+    # BAD:  len := 5       // shadows builtin len()
+    # BAD:  error := "msg" // shadows the builtin error type
+    # GOOD: length := 5; errMsg := "msg"
+    - predeclared
+
+    # revive: Style + API hygiene rules
+    # Used here for unexported return type checks on exported funcs.
+    - revive
+
+    # forbidigo: Forbid risky textual patterns
+    # Used here to block `any` in exported function signatures.
+    - forbidigo
+
+    # godoclint: Go doc comment practice (godoc-lint via golangci-lint).
+    - godoclint
+
+    # gocritic (go-critic): Extra bug/perf/style diagnostics beyond vet/staticcheck.
+    - gocritic
+
+    # modernize: Suggest simplifications using modern Go/stdlib.
+    - modernize
+
+    # === HYGIENE / CONSISTENCY ===
+    # gomoddirectives: go.mod directive hygiene (replace, retract, toolchain, etc.).
+    - gomoddirectives
+
+    # nolintlint: Ill-formed //nolint directives; keeps suppressions specific and effective.
+    - nolintlint
+
+    # thelper: Test helpers should call t.Helper() so failures point at call sites.
+    - thelper
+
+    # paralleltest: Unsafe t.Parallel() patterns.
+    - paralleltest
+
+    # usestdlibvars: Prefer stdlib named constants (HTTP methods/status, time layouts, etc.).
+    - usestdlibvars
+
+    # mirror: Prefer bytes/strings stdlib helpers where appropriate.
+    - mirror
+
+    # misspell / dupword: Typos and duplicated words.
+    - misspell
+    - dupword
+
+    # === TEST QUALITY ===
+    # usetesting: Prefer testing package helpers over os equivalents (has autofix)
+    # BAD:  os.MkdirTemp("", "test"); os.Setenv("K", "v")
+    # GOOD: t.TempDir(); t.Setenv("K", "v"); t.Context()
+    - usetesting
+
+    # testableexamples: Ensures Example functions have expected output comments
+    - testableexamples
+
+    # testifylint: enforces correct github.com/stretchr/testify usage.
+    - testifylint
+
+    # === COMPLEXITY ===
+    # cyclop: cyclomatic complexity per function.
+    - cyclop
+
+    # gocognit: cognitive complexity.
+    - gocognit
+
+    # nestif: reports deeply nested if statements.
+    - nestif
+
+    # === CORRECTNESS / SAFETY ===
+    # exhaustive: enum switch completeness.
+    - exhaustive
+
+    # asasalint: catches []any passed as a single argument to a func(...any).
+    - asasalint
+
+    # === HYGIENE ===
+    # depguard: ban deprecated/forbidden imports.
+    - depguard
+
+    # goheader: enforce the Apache 2.0 license header on every source file.
+    - goheader
+
+    # perfsprint: prefer strconv / concatenation over fmt.Sprintf where cheaper.
+    - perfsprint
+
+    # exptostd: replace golang.org/x/exp helpers with their stdlib equivalents.
+    - exptostd
+
+    # dogsled: flag too many blank identifiers in a single assignment.
+    - dogsled
+
+    # prealloc: suggests pre-allocating slices that are grown inside loops.
+    - prealloc
+
+    # unparam: reports unused function params and always-identical returns.
+    - unparam
+
+    # === STYLE ===
+    # nlreturn: require a blank line before return/branch statements.
+    - nlreturn
+
+    # === STRUCT TAGS ===
+    # tagliatelle: enforce struct tag naming conventions (snake_case keys).
+    - tagliatelle
+
+    # tagalign: keep struct tags aligned and ordered (has autofix).
+    - tagalign
+
+  settings:
+    bidichk:
+      left-to-right-embedding: true
+      right-to-left-embedding: true
+      pop-directional-formatting: true
+      left-to-right-override: true
+      right-to-left-override: true
+      left-to-right-isolate: true
+      right-to-left-isolate: true
+      first-strong-isolate: true
+      pop-directional-isolate: true
+
+    errcheck:
+      check-type-assertions: true
+      check-blank: true
+      disable-default-exclusions: false
+      exclude-functions: []
+      verbose: true
+
+    errorlint:
+      errorf: true
+      asserts: true
+      comparison: true
+
+    gosec:
+      severity: medium
+      confidence: medium
+
+    gomoddirectives:
+      replace-local: false
+      retract-allow-no-explanation: false
+      check-module-path: true
+
+    govet:
+      enable:
+        - shadow
+        - nilness
+        - unusedwrite
+      settings:
+        shadow:
+          strict: true
+
+    makezero:
+      always: true
+
+    nilnil:
+      detect-opposite: true
+
+    reassign:
+      patterns:
+        - ".*"
+
+    revive:
+      rules:
+        - name: unexported-return
+        - name: package-comments
+        - name: var-naming
+
+    forbidigo:
+      forbid:
+        - pattern: "^func\\s+\\([^)]+\\)\\s+[A-Z][A-Za-z0-9_]*\\([^)]*\\bany\\b"
+        - pattern: "^func\\s+[A-Z][A-Za-z0-9_]*\\([^)]*\\bany\\b"
+
+    godoclint:
+      default: all
+      options:
+        max-len:
+          length: 80
+      disable:
+        - start-with-name
+
+    gocritic:
+      enabled-tags:
+        - diagnostic
+        - performance
+      disabled-checks:
+        - hugeParam
+        - rangeValCopy
+
+    modernize:
+      disable:
+        - any
+
+    staticcheck:
+      checks: ["all"]
+
+    nolintlint:
+      allow-unused: false
+      allow-no-explanation: []
+      require-explanation: false
+      require-specific: true
+
+    paralleltest:
+      ignore-missing: true
+      ignore-missing-subtests: true
+
+    misspell:
+      locale: US
+      mode: restricted
+      ignore-rules:
+        - colour
+        - spectre
+
+    dupword:
+      comments-only: true
+
+    inamedparam:
+      skip-single-param: true
+
+    ireturn:
+      allow:
+        - anon
+        - error
+        - empty
+        - stdlib
+        - generic
+
+    nakedret:
+      max-func-lines: 5
+
+    predeclared:
+      qualified-name: true
+
+    unconvert:
+      safe: true
+
+    usetesting:
+      os-create-temp: true
+      os-mkdir-temp: true
+      os-setenv: true
+      os-chdir: true
+      context-background: true
+      context-todo: true
+
+    cyclop:
+      max-complexity: 15
+      package-average: 0.0
+
+    gocognit:
+      min-complexity: 20
+
+    nestif:
+      min-complexity: 5
+
+    exhaustive:
+      default-signifies-exhaustive: true
+
+    depguard:
+      rules:
+        main:
+          deny:
+            - pkg: "math/rand$"
+              desc: use math/rand/v2 for a better API (Go 1.22+)
+            - pkg: github.com/pkg/errors
+              desc: use the standard errors package with fmt.Errorf and %w
+            - pkg: io/ioutil
+              desc: deprecated in Go 1.16, use the io and os packages
+
+    perfsprint:
+      integer-format: true
+      int-conversion: true
+      error-format: true
+      errorf: true
+      string-format: true
+      sprintf1: true
+      strconcat: true
+      bool-format: true
+      hex-format: true
+      concat-loop: true
+
+    testifylint:
+      enable-all: true
+      formatter:
+        check-format-string: true
+        require-f-funcs: true
+      require-error:
+        fn-pattern: ^(Errorf?|NoErrorf?)$
+      expected-actual:
+        pattern: ^expected
+      bool-compare:
+        ignore-custom-types: false
+      go-require:
+        ignore-http-handlers: false
+      suite-extra-assert-call:
+        mode: remove
+
+    tagliatelle:
+      case:
+        rules:
+          json: snake
+          yaml: snake
+          toml: snake
+          mapstructure: snake
+
+    tagalign:
+      align: true
+      sort: true
+      order:
+        - json
+        - yaml
+        - toml
+        - mapstructure
+
+    prealloc:
+      simple: true
+      range-loops: true
+      for-loops: false
+
+    nlreturn:
+      block-size: 2
+
+    unparam:
+      check-exported: false
+
+    asasalint:
+      use-builtin-exclusions: true
+
+    goheader:
+      values:
+        regexp:
+          YEAR: \d{4}
+      template: |-
+        Copyright {{ YEAR }} The Gopherly Authors
+
+        Licensed under the Apache License, Version 2.0 (the "License");
+        you may not use this file except in compliance with the License.
+        You may obtain a copy of the License at
+
+            http://www.apache.org/licenses/LICENSE-2.0
+
+        Unless required by applicable law or agreed to in writing, software
+        distributed under the License is distributed on an "AS IS" BASIS,
+        WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+        See the License for the specific language governing permissions and
+        limitations under the License.
+
+    thelper:
+      tb:
+        begin: false
+
+formatters:
+  enable:
+    - gofumpt
+    - gci
+
+  settings:
+    gofumpt:
+      module-path: gopherly.dev/termio
+      extra-rules: true
+
+    gci:
+      sections:
+        - standard
+        - default
+        - prefix(gopherly.dev/termio)
+        - blank
+        - alias
+      custom-order: true
+      no-inline-comments: true
+      no-prefix-comments: true
+
+issues:
+  max-issues-per-linter: 0
+  max-same-issues: 0
+  fix: false
+
+run:
+  timeout: 5m
