@@ -20,7 +20,6 @@ import (
 	"io"
 	"os"
 	"testing"
-	"unsafe"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -44,14 +43,9 @@ func setWinsize(t *testing.T, f *os.File, cols, rows uint16) {
 	t.Helper()
 
 	ws := unix.Winsize{Col: cols, Row: rows}
-	_, _, errno := unix.Syscall(
-		unix.SYS_IOCTL,
-		f.Fd(),
-		unix.TIOCSWINSZ,
-		uintptr(unsafe.Pointer(&ws)),
-	)
+	err := unix.IoctlSetWinsize(int(f.Fd()), unix.TIOCSWINSZ, &ws)
 
-	require.Zerof(t, errno, "TIOCSWINSZ must succeed")
+	require.NoErrorf(t, err, "TIOCSWINSZ must succeed")
 }
 
 // TestStreams_TTYDetectionRealTerminal verifies TTY detection against a PTY.

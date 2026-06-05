@@ -53,7 +53,6 @@ type Streams struct {
 	// Out, but its sticky error is independent.
 	ErrOut *Writer
 
-	rawIn     io.Reader
 	rawOut    io.Writer
 	rawErrOut io.Writer
 
@@ -96,7 +95,6 @@ func New(in io.Reader, out, errOut io.Writer, opts ...Option) *Streams {
 		In:          in,
 		Out:         newWriter(out, cfg.colorPolicy),
 		ErrOut:      newWriter(errOut, cfg.colorPolicy),
-		rawIn:       in,
 		rawOut:      out,
 		rawErrOut:   errOut,
 		stdinIsTTY:  isTerminal(in),
@@ -135,16 +133,12 @@ func (s *Streams) SetStderrTTY(v bool) { s.stderrIsTTY = v }
 // TerminalWidth returns the column width of the controlling terminal, or
 // [DefaultWidth] when stdout is not a terminal or its size cannot be queried.
 func (s *Streams) TerminalWidth() int {
-	fd := s.Out.Fd()
-	if fd == InvalidFd {
+	fd, ok := fdToInt(s.Out.Fd())
+	if !ok {
 		return DefaultWidth
 	}
 
-	if fd > uintptr(math.MaxInt) {
-		return DefaultWidth
-	}
-
-	w, _, err := term.GetSize(int(fd))
+	w, _, err := term.GetSize(fd)
 	if err != nil || w <= 0 {
 		return DefaultWidth
 	}
@@ -160,7 +154,7 @@ func (s *Streams) Err() error {
 }
 
 // RawIn returns the unwrapped input stream supplied to [New] or [System].
-func (s *Streams) RawIn() io.Reader { return s.rawIn }
+func (s *Streams) RawIn() io.Reader { return s.In }
 
 // RawOut returns the unwrapped output stream supplied to [New] or [System].
 func (s *Streams) RawOut() io.Writer { return s.rawOut }
@@ -171,16 +165,22 @@ func (s *Streams) RawErrOut() io.Writer { return s.rawErrOut }
 
 // isTerminal reports whether v is backed by a real terminal.
 func isTerminal(v any) bool {
-	fd := fdOf(v)
-	if fd == InvalidFd {
+	fd, ok := fdToInt(fdOf(v))
+	if !ok {
 		return false
 	}
 
-	if fd > uintptr(math.MaxInt) {
-		return false
+	return term.IsTerminal(fd)
+}
+
+// fdToInt converts fd to int, reporting false if the value overflows or is
+// invalid.
+func fdToInt(fd uintptr) (int, bool) {
+	if fd == InvalidFd || fd > uintptr(math.MaxInt) {
+		return 0, false
 	}
 
-	return term.IsTerminal(int(fd))
+	return int(fd), true
 }
 
 // nopReader is a reader that returns [io.EOF] on every Read call.

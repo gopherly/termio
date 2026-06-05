@@ -30,6 +30,8 @@ import "io"
 //
 // Writer satisfies [io.Writer] and interface{ Fd() uintptr }.
 // Obtain a Writer via [New] or [System]; do not construct one directly.
+//
+// Writer is not safe for concurrent use by multiple goroutines.
 type Writer struct {
 	w         io.Writer
 	fd        uintptr
@@ -41,7 +43,7 @@ type Writer struct {
 //
 // Write implements [io.Writer].
 func (w *Writer) Write(p []byte) (int, error) {
-	if w.stickyErr.err != nil {
+	if w.stickyErr.has() {
 		return 0, w.stickyErr.err
 	}
 
@@ -85,6 +87,8 @@ func newWriter(raw io.Writer, policy ColorPolicy) *Writer {
 type stickyError struct {
 	err error
 }
+
+func (e *stickyError) has() bool { return e.err != nil }
 
 func (e *stickyError) record(err error) {
 	if e.err == nil && err != nil {

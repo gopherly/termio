@@ -20,6 +20,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 // TestFdOf_NilFile verifies that a nil *[os.File] returns InvalidFd.
@@ -51,9 +52,7 @@ func TestFdOf_RealFile(t *testing.T) {
 	t.Parallel()
 
 	f, err := os.CreateTemp(t.TempDir(), "termio-fd-test-*")
-	if err != nil {
-		t.Fatalf("create temp file: %v", err)
-	}
+	require.NoErrorf(t, err, "create temp file")
 
 	t.Cleanup(func() { f.Close() }) //nolint:errcheck
 
