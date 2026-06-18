@@ -88,7 +88,7 @@ func TestPolicy_String(t *testing.T) {
 }
 
 // TestDetect_Profile verifies Detect exposes the detected profile via Profile().
-// A [bytes.Buffer] (non-TTY) with NO_COLOR=1 yields NoTTY — the lowest level.
+// A [bytes.Buffer] (non-TTY) with NO_COLOR=1 yields NoTTY, the lowest level.
 func TestDetect_Profile(t *testing.T) {
 	t.Parallel()
 

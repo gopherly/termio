@@ -27,8 +27,8 @@ import (
 // stream is not a terminal or its size cannot be determined.
 const DefaultWidth = 80
 
-// Streams bundles the three standard I/O channels a CLI program needs —
-// input, output, and diagnostics — together with terminal capability
+// Streams bundles the three standard I/O channels a CLI program needs:
+// input, output, and diagnostics. It also provides terminal capability
 // detection. It is the central type of the termio package.
 //
 // Out and ErrOut are [*Writer] values rather than plain [io.Writer]

@@ -69,7 +69,7 @@ func (p *Policy) Profile() Profile { return p.profile }
 func (p *Policy) String() string { return p.profile.String() }
 
 // Apply wraps w with a charmbracelet/colorprofile.Writer that rewrites ANSI
-// escape sequences according to the detected terminal capability.
+// escape sequences according to the policy profile level.
 func (p *Policy) Apply(w io.Writer) io.Writer {
 	return &cbcolorprofile.Writer{Forward: w, Profile: p.profile}
 }

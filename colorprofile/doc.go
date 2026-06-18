@@ -46,7 +46,7 @@
 //
 //	Constant   Description
 //	NoTTY      no terminal attached
-//	Ascii      no color support
+//	ASCII      no color support
 //	ANSI       16-color ANSI
 //	ANSI256    256-color ANSI
 //	TrueColor  24-bit true color

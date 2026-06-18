@@ -12,8 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Package termio provides a dependency-light bundle of terminal I/O
-// primitives for Go CLI programs.
+// Package termio provides terminal I/O primitives for Go CLI programs.
 //
 // # Overview
 //
@@ -44,7 +43,7 @@
 // is opt-in and lives in the [gopherly.dev/termio/colorprofile] sub-package;
 // callers that do not need color never compile that dependency.
 //
-// # Quick start — with color adaptation
+// # Quick start - with color adaptation
 //
 //	import (
 //	    "os"
@@ -57,7 +56,7 @@
 //	)
 //	fmt.Fprintln(s.Out, "\x1b[32mgreen\x1b[0m or plain, depending on the terminal")
 //
-// # Quick start — without color
+// # Quick start - without color
 //
 //	s := termio.System()  // no color dep compiled
 //	fmt.Fprintln(s.Out, "plain output")

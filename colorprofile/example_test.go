@@ -24,7 +24,7 @@ import (
 )
 
 // ExamplePolicy_Profile shows how to build a policy from an explicit level
-// and retrieve it — useful when passing the level to Charm libraries
+// and retrieve it. This is useful when passing the level to Charm libraries
 // (lipgloss, glamour) or branching on color capability.
 func ExamplePolicy_Profile() {
 	policy := colorprofile.From(colorprofile.ANSI256)
@@ -47,4 +47,13 @@ func ExampleDetect() {
 	fmt.Print(buf.String())
 	// Output:
 	// hello
+}
+
+// ExampleFrom builds a Policy from an explicit profile level, bypassing
+// auto-detection. Use this when the level is known ahead of time.
+func ExampleFrom() {
+	policy := colorprofile.From(colorprofile.ANSI)
+	fmt.Println(policy.Profile())
+	// Output:
+	// ANSI
 }

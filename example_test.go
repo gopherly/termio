@@ -15,11 +15,13 @@
 package termio_test
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"io"
 
 	"gopherly.dev/termio"
+	"gopherly.dev/termio/colorprofile"
 	"gopherly.dev/termio/termiotest"
 )
 
@@ -54,7 +56,7 @@ func ExampleNew() {
 }
 
 // ExampleWriter_Err illustrates the per-stream sticky error. After a write
-// fails, the error is latched on that Writer only — the other stream
+// fails, the error is latched on that Writer only. The other stream
 // continues to work normally.
 func ExampleWriter_Err() {
 	errWriter := &alwaysFailWriter{}
@@ -67,6 +69,68 @@ func ExampleWriter_Err() {
 	// Output:
 	// Out.Err: always fails
 	// ErrOut.Err: <nil>
+}
+
+// ExampleWithColorPolicy shows how to inject a ColorPolicy at construction
+// time. ANSI escape sequences are rewritten before they reach the output.
+func ExampleWithColorPolicy() {
+	buf := &bytes.Buffer{}
+	env := []string{"NO_COLOR=1"}
+	policy := colorprofile.Detect(buf, env)
+	s := termio.New(nil, buf, io.Discard, termio.WithColorPolicy(policy))
+
+	fmt.Fprintln(s.Out, "\x1b[32mhello\x1b[0m") //nolint:errcheck
+	fmt.Print(buf.String())
+	// Output:
+	// hello
+}
+
+// ExampleStreams_TerminalWidth shows the fallback width for non-terminal
+// streams such as buffer-backed writers used in tests.
+func ExampleStreams_TerminalWidth() {
+	s, in, out, errOut := termiotest.New()
+	_ = in
+	_ = out
+	_ = errOut
+
+	fmt.Println(s.TerminalWidth())
+	// Output:
+	// 80
+}
+
+// ExampleStreams_IsInteractive reports whether both stdin and stdout are
+// terminals. termiotest.New returns non-TTY streams; NewTTY simulates a
+// terminal session.
+func ExampleStreams_IsInteractive() {
+	plain, in, out, errOut := termiotest.New()
+	_ = in
+	_ = out
+	_ = errOut
+
+	tty, in2, out2, err2 := termiotest.NewTTY()
+	_ = in2
+	_ = out2
+	_ = err2
+
+	fmt.Println(plain.IsInteractive())
+	fmt.Println(tty.IsInteractive())
+	// Output:
+	// false
+	// true
+}
+
+// ExampleStreams_Err returns the first write error from Out or ErrOut. When
+// both streams fail, the errors are joined.
+func ExampleStreams_Err() {
+	errWriter := &alwaysFailWriter{}
+	s := termio.New(nil, errWriter, errWriter)
+
+	fmt.Fprintln(s.Out, "fail")    //nolint:errcheck
+	fmt.Fprintln(s.ErrOut, "fail") //nolint:errcheck
+
+	fmt.Println(s.Err() != nil)
+	// Output:
+	// true
 }
 
 // alwaysFailWriter returns an error on every write call.
