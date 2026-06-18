@@ -27,6 +27,10 @@ import (
 // stream is not a terminal or its size cannot be determined.
 const DefaultWidth = 80
 
+// DefaultHeight is the terminal row count assumed when the underlying
+// stream is not a terminal or its size cannot be determined.
+const DefaultHeight = 24
+
 // Streams bundles the three standard I/O channels a CLI program needs:
 // input, output, and diagnostics. It also provides terminal capability
 // detection. It is the central type of the termio package.
@@ -62,7 +66,7 @@ type Streams struct {
 }
 
 // System returns a [Streams] backed by [os.Stdin], [os.Stdout], and
-// [os.Stderr]. TTY status and terminal width are detected against the real
+// [os.Stderr]. TTY status and terminal size are detected against the real
 // file descriptors. Apply functional options to configure color adaptation.
 func System(opts ...Option) *Streams {
 	return New(os.Stdin, os.Stdout, os.Stderr, opts...)
@@ -144,6 +148,22 @@ func (s *Streams) TerminalWidth() int {
 	}
 
 	return w
+}
+
+// TerminalHeight returns the row count of the controlling terminal, or
+// [DefaultHeight] when stdout is not a terminal or its size cannot be queried.
+func (s *Streams) TerminalHeight() int {
+	fd, ok := fdToInt(s.Out.Fd())
+	if !ok {
+		return DefaultHeight
+	}
+
+	_, h, err := term.GetSize(fd)
+	if err != nil || h <= 0 {
+		return DefaultHeight
+	}
+
+	return h
 }
 
 // Err returns the first write error encountered by either Out or ErrOut, or

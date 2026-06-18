@@ -18,7 +18,7 @@
 //
 // [Streams] is the central type. It bundles an input reader (In) and two
 // output writers (Out and ErrOut) together with TTY detection and terminal
-// width querying. Call [System] to get streams backed by the real OS
+// size querying. Call [System] to get streams backed by the real OS
 // file descriptors:
 //
 //	s := termio.System()
@@ -85,7 +85,8 @@
 //	Option        Description
 //	WithColorPolicy  inject a ColorPolicy into Out and ErrOut
 //
-//	Constant      Description
-//	DefaultWidth  fallback column width (80) when width is unknown
-//	InvalidFd     sentinel Fd value (^uintptr(0)) for non-file streams
+//	Constant       Description
+//	DefaultWidth   fallback column width (80) when width is unknown
+//	DefaultHeight  fallback row height (24) when height is unknown
+//	InvalidFd      sentinel Fd value (^uintptr(0)) for non-file streams
 package termio

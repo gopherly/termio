@@ -36,7 +36,7 @@ const (
 	TrueColor = cbcolorprofile.TrueColor
 )
 
-// Policy adapts ANSI color output to a terminal's detected capability level.
+// Policy adapts ANSI color output to a terminal's color capability level.
 // Use [Detect] for auto-detection or [From] to set an explicit level.
 // Policy implements [termio.ColorPolicy].
 type Policy struct {

@@ -73,3 +73,16 @@ func TestStreams_TerminalWidthRealTerminal(t *testing.T) {
 	assert.Equalf(t, 120, s.TerminalWidth(),
 		"PTY-backed TerminalWidth must reflect the configured size")
 }
+
+// TestStreams_TerminalHeightRealTerminal verifies height detection against a PTY.
+func TestStreams_TerminalHeightRealTerminal(t *testing.T) {
+	t.Parallel()
+
+	pty := openPTY(t)
+	setWinsize(t, pty, 120, 40)
+
+	s := termio.New(nil, pty, io.Discard)
+
+	assert.Equalf(t, 40, s.TerminalHeight(),
+		"PTY-backed TerminalHeight must reflect the configured size")
+}

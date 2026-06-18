@@ -98,6 +98,19 @@ func ExampleStreams_TerminalWidth() {
 	// 80
 }
 
+// ExampleStreams_TerminalHeight shows the fallback row count for non-terminal
+// streams such as buffer-backed writers used in tests.
+func ExampleStreams_TerminalHeight() {
+	s, in, out, errOut := termiotest.New()
+	_ = in
+	_ = out
+	_ = errOut
+
+	fmt.Println(s.TerminalHeight())
+	// Output:
+	// 24
+}
+
 // ExampleStreams_IsInteractive reports whether both stdin and stdout are
 // terminals. termiotest.New returns non-TTY streams; NewTTY simulates a
 // terminal session.

@@ -219,6 +219,42 @@ func TestStreams_TerminalWidthNonTerminalFd(t *testing.T) {
 		"regular file FD must fall back to DefaultWidth")
 }
 
+// TestStreams_TerminalHeightDefaultsForBuffers verifies DefaultHeight for buffers.
+func TestStreams_TerminalHeightDefaultsForBuffers(t *testing.T) {
+	t.Parallel()
+
+	s, _, _, _ := termiotest.New() //nolint:dogsled
+
+	assert.Equalf(t, termio.DefaultHeight, s.TerminalHeight(),
+		"buffer-backed Streams must return DefaultHeight")
+}
+
+// TestStreams_TerminalHeightOverflowFd verifies overflow FD falls back to default.
+func TestStreams_TerminalHeightOverflowFd(t *testing.T) {
+	t.Parallel()
+
+	raw := &fdWriter{fd: uintptr(math.MaxInt) + 1}
+	s := termio.New(nil, raw, io.Discard)
+
+	assert.Equalf(t, termio.DefaultHeight, s.TerminalHeight(),
+		"overflow FD must fall back to DefaultHeight")
+}
+
+// TestStreams_TerminalHeightNonTerminalFd verifies regular file uses default.
+func TestStreams_TerminalHeightNonTerminalFd(t *testing.T) {
+	t.Parallel()
+
+	f, err := os.CreateTemp(t.TempDir(), "termio-height-*")
+	require.NoErrorf(t, err, "create temp file")
+
+	t.Cleanup(func() { f.Close() }) //nolint:errcheck
+
+	s := termio.New(nil, f, io.Discard)
+
+	assert.Equalf(t, termio.DefaultHeight, s.TerminalHeight(),
+		"regular file FD must fall back to DefaultHeight")
+}
+
 // TestStreams_TTYDetectionOverflowFd verifies overflow FD is not detected as TTY.
 func TestStreams_TTYDetectionOverflowFd(t *testing.T) {
 	t.Parallel()
